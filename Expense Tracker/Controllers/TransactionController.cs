@@ -6,6 +6,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Expense_Tracker.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.IO;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.IO.Image;
 
 namespace Expense_Tracker.Controllers
 {
@@ -99,5 +111,64 @@ namespace Expense_Tracker.Controllers
             CategoryCollection.Insert(0, DefaultCategory);
             ViewBag.Categories = CategoryCollection;
         }
+
+        public async Task<IActionResult> GenerarPDF()
+        {
+            var transactions = await _context.Transactions.Include(t => t.Category).ToListAsync();
+
+
+            // Crear un nuevo documento PDF en una ubicación temporal
+            string rutaTempPDF = Path.GetTempFileName() + ".pdf";
+
+            using (PdfDocument pdfDocument = new PdfDocument(new PdfWriter(rutaTempPDF)))
+            {
+                using (Document document = new Document(pdfDocument))
+                {
+                    document.Add(new Paragraph("Resumen de Transacciones"));
+
+                    // Crear la tabla para mostrar la lista de objetos
+                    iText.Layout.Element.Table table = new iText.Layout.Element.Table(5);
+                    // 5 columnas
+                    table.SetWidth(UnitValue.CreatePercentValue(100)); // Ancho de la tabla al 100% del documento
+
+                    // Añadir las celdas de encabezado a la tabla
+                    table.AddHeaderCell("ID Transacción");
+                    table.AddHeaderCell("Categoría");
+                    table.AddHeaderCell("Monto");
+                    table.AddHeaderCell("Nota");
+                    table.AddHeaderCell("Fecha");
+
+
+                    foreach (Transaction transaction in transactions)
+                    {
+                        table.AddCell(transaction.TransactionId.ToString());
+                        table.AddCell(transaction.Category.Title);
+                        table.AddCell(transaction.FormattedAmount.ToString());
+                        if (transaction.Note == null)
+                            table.AddCell("Sin Nota");
+                        else
+                            table.AddCell(transaction.Note);
+                        table.AddCell(transaction.Date.ToString("dd/MM/yyyy"));
+
+                    }
+
+                    // Añadir la tabla al documento
+                    document.Add(table);
+                }
+            }
+
+            // Leer el archivo PDF como un arreglo de bytes
+            byte[] fileBytes = System.IO.File.ReadAllBytes(rutaTempPDF);
+
+            // Eliminar el archivo temporal
+            System.IO.File.Delete(rutaTempPDF);
+
+            // Descargar el archivo PDF
+            return new FileStreamResult(new MemoryStream(fileBytes), "application/pdf")
+            {
+                FileDownloadName = "ReporteProductos.pdf"
+            };
+        }
+
     }
 }

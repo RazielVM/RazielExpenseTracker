@@ -6,11 +6,20 @@
     ViewData["PageActionUrl"] = "/Transaction/AddOrEdit";
 }
 
-<div class="row">
+<div class="text-center">
+    <h4>Descargar PDF <i class="bi bi-file-earmark-pdf-fill"> ...</i></h4>
+        <div class="btn-group" role="group">
+        <a class="btn btn-outline-success" style="width: 15rem" asp-action="GenerarPDFIngresos">Ingresos <i class="bi bi-cash"></i><i class="bi bi-arrow-up"></i></a>
+        <a class="btn btn-outline-danger" style="width: 15rem" asp-action="GenerarPDFGastos">Gastos <i class="bi bi-cash"></i><i class="bi bi-arrow-down"></i></a>
+        <a class="btn btn-outline-warning" style="width: 15rem" asp-action="GenerarPDF">Todo <i class="bi bi-cash"></i><i class="bi bi-arrow-down-up mx-1"></i></a>
+        </div>
+</div>
+
+<div class="row mt-4">
     <div class="col-md-12">
         <form asp-controller="Transaction" asp-action="Index" method="post">
             <div class="form-row">
-                <h3>Busqueda por...</h3>
+                <h4>Busqueda por...</h4>
                 @*<div class="form-group col-md-3">
                     <label for="categoria">Categoría:</label>
                     <input type="text" class="form-control" id="categoria" name="categoria">
@@ -54,6 +63,8 @@
         </div>
     </div>
 </div>
+
+
 
 <script id="actionColumnTemplate" type="text/x-template">
     <div class="d-flex flex-row justify-content-start">
