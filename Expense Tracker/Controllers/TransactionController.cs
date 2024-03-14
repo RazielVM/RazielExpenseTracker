@@ -115,6 +115,8 @@ namespace Expense_Tracker.Controllers
         public async Task<IActionResult> GenerarPDF()
         {
             var transactions = await _context.Transactions.Include(t => t.Category).ToListAsync();
+            //var gastos = transactions.Where(t => t.Category.Type == "Expense").ToList();
+            //var ingresos = transactions.Where(t => t.Category.Type == "Income").ToList();
 
 
             // Crear un nuevo documento PDF en una ubicación temporal
@@ -154,6 +156,119 @@ namespace Expense_Tracker.Controllers
 
                     // Añadir la tabla al documento
                     document.Add(table);
+                }
+            }
+
+            // Leer el archivo PDF como un arreglo de bytes
+            byte[] fileBytes = System.IO.File.ReadAllBytes(rutaTempPDF);
+
+            // Eliminar el archivo temporal
+            System.IO.File.Delete(rutaTempPDF);
+
+            // Descargar el archivo PDF
+            return new FileStreamResult(new MemoryStream(fileBytes), "application/pdf")
+            {
+                FileDownloadName = "ReporteProductos.pdf"
+            };
+        }
+        public async Task<IActionResult> GenerarPDFIngresos()
+        {
+            var transactions = await _context.Transactions.Include(t => t.Category).ToListAsync();
+            var ingresos = transactions.Where(t => t.Category.Type == "Income").ToList();
+
+
+            // Crear un nuevo documento PDF en una ubicación temporal
+            string rutaTempPDF = Path.GetTempFileName() + ".pdf";
+
+            using (PdfDocument pdfDocument = new PdfDocument(new PdfWriter(rutaTempPDF)))
+            {
+                using (Document document = new Document(pdfDocument))
+                {
+                    document.Add(new Paragraph("Ingresos"));
+
+                    // Crear la tabla para los ingresos
+                    iText.Layout.Element.Table ingresosTable = new iText.Layout.Element.Table(5);
+                    ingresosTable.SetWidth(UnitValue.CreatePercentValue(100)); // Ancho de la tabla al 100% del documento
+
+                    // Añadir las celdas de encabezado a la tabla de ingresos
+                    ingresosTable.AddHeaderCell("ID Transacción");
+                    ingresosTable.AddHeaderCell("Categoría");
+                    ingresosTable.AddHeaderCell("Monto");
+                    ingresosTable.AddHeaderCell("Nota");
+                    ingresosTable.AddHeaderCell("Fecha");
+
+                    // Llenar la tabla de ingresos con las transacciones correspondientes
+                    foreach (Transaction ingreso in ingresos)
+                    {
+                        ingresosTable.AddCell(ingreso.TransactionId.ToString());
+                        ingresosTable.AddCell(ingreso.Category.Title);
+                        ingresosTable.AddCell(ingreso.FormattedAmount.ToString());
+                        if (ingreso.Note == null)
+                            ingresosTable.AddCell("Sin Nota");
+                        else
+                            ingresosTable.AddCell(ingreso.Note);
+                        ingresosTable.AddCell(ingreso.Date.ToString("dd/MM/yyyy"));
+                    }
+
+                    // Añadir la tabla de ingresos al documento
+                    document.Add(ingresosTable);
+                }
+            }
+
+            // Leer el archivo PDF como un arreglo de bytes
+            byte[] fileBytes = System.IO.File.ReadAllBytes(rutaTempPDF);
+
+            // Eliminar el archivo temporal
+            System.IO.File.Delete(rutaTempPDF);
+
+            // Descargar el archivo PDF
+            return new FileStreamResult(new MemoryStream(fileBytes), "application/pdf")
+            {
+                FileDownloadName = "ReporteProductos.pdf"
+            };
+        }
+
+        public async Task<IActionResult> GenerarPDFGastos()
+        {
+            var transactions = await _context.Transactions.Include(t => t.Category).ToListAsync();
+            var gastos = transactions.Where(t => t.Category.Type == "Expense").ToList();
+
+
+            // Crear un nuevo documento PDF en una ubicación temporal
+            string rutaTempPDF = Path.GetTempFileName() + ".pdf";
+
+            using (PdfDocument pdfDocument = new PdfDocument(new PdfWriter(rutaTempPDF)))
+            {
+                using (Document document = new Document(pdfDocument))
+                {
+                    document.Add(new Paragraph("Gastos"));
+
+                    // Crear la tabla para los ingresos
+                    iText.Layout.Element.Table gastosTable = new iText.Layout.Element.Table(5);
+                    gastosTable.SetWidth(UnitValue.CreatePercentValue(100)); // Ancho de la tabla al 100% del documento
+
+                    // Añadir las celdas de encabezado a la tabla de ingresos
+                    gastosTable.AddHeaderCell("ID Transacción");
+                    gastosTable.AddHeaderCell("Categoría");
+                    gastosTable.AddHeaderCell("Monto");
+                    gastosTable.AddHeaderCell("Nota");
+                    gastosTable.AddHeaderCell("Fecha");
+
+                    // Llenar la tabla de ingresos con las transacciones correspondientes
+                    foreach (Transaction gasto in gastos)
+                    {
+                        gastosTable.AddCell(gasto.TransactionId.ToString());
+                        gastosTable.AddCell(gasto.Category.Title);
+                        gastosTable.AddCell(gasto.FormattedAmount.ToString());
+                        if (gasto.Note == null)
+                            gastosTable.AddCell("Sin Nota");
+                        else
+                            gastosTable.AddCell(gasto.Note);
+                        gastosTable.AddCell(gasto.Date.ToString("dd/MM/yyyy"));
+                    }
+
+                    // Añadir la tabla de ingresos al documento
+                    document.Add(gastosTable);
                 }
             }
 
